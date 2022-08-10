@@ -1,0 +1,120 @@
+import sqlite3
+import random
+
+
+conn = sqlite3.connect('card.s3db')  # Создаём соединение
+
+
+c = conn.cursor()
+
+c.execute("DROP TABLE IF EXISTS card;")
+
+c.execute("CREATE TABLE IF NOT EXISTS card (id INTEGER PRIMARY KEY, number TEXT, pin TEXT, balance INTEGER DEFAULT 0);")
+conn.commit()
+
+# Далее создадим класс с нужными функциями
+
+
+class BankingSystem:
+
+    def __init__(self):
+        self.card_number_main = str
+        self.pin_main = str
+        self.user_menu_choice = int
+
+    def menu(self):
+        print('''Выберите действие:
+                1. Create an account
+                2. Log into account
+                0. Exit''')
+        self.user_menu_choice = int(input('>'))
+        return self.user_menu_choice
+
+    def create_account(self):
+        print('Your card has been created')
+        print('Your card number: ')
+        number = random.randint(99999999, 1000000000)
+        number_lst = [int(x) for x in str(number)]
+        const_lst = [4, 0, 0, 0, 0, 0]
+        final_lst = const_lst + number_lst
+        li = []
+        count = 0
+        for i in final_lst:
+            if count % 2 != 1:
+                li.append(i * 2)
+                count += 1
+            else:
+                li.append(i)
+                count += 1
+
+        new = []
+        for i in li:
+            if i > 9:
+                new.append(i - 9)
+                count += 1
+            else:
+                new.append(i)
+                count += 1
+
+        summa = sum(new)
+        result = (summa // 10 + 1) * 10 - summa
+        if result > 9:
+            result = 0
+
+        card_nimber = f"400000{number}{result}"
+        print(card_nimber)
+
+        print('Your card PIN: ')
+        pin_generator = ''
+        while len(pin_generator) < 4:
+            pin_generator += str(random.randrange(10))
+        print(pin_generator)
+        self.card_number_main = card_nimber
+        self.pin_main = pin_generator
+
+        c.execute("INSERT INTO card (number, pin) VALUES(?, ?)", (card_nimber, pin_generator))
+        conn.commit()
+
+    def login(self):
+        c.execute("SELECT last_insert_rowid() FROM card")
+        print(c.fetchall())
+        conn.commit()
+
+        print('Enter your card number: ')
+        card_number = (input('>'))
+        print('Enter your PIN: ')
+        pin = str(input('>'))
+        if (card_number == self.card_number_main) and (pin == self.pin_main):
+            print('You have successfully logged in!')
+            while True:
+                print('''Выберите действие:
+                            1. Balance
+                            2. Log out
+                            0. Exit''')
+                second_menu_choice = int(input('Введите число: '))
+                if second_menu_choice == 1:
+                    print('Balance = 0')
+                elif second_menu_choice == 2:
+                    print('You have successfully logged out!')
+                    break
+                else:
+                    print('Wrong number')
+                    exit()
+        else:
+            print('Wrong card number or PIN!')
+
+    def main(self):
+        while True:
+            self.menu()
+            if self.user_menu_choice == 1:
+                self.create_account()
+            elif self.user_menu_choice == 2:
+                self.login()
+            else:
+                print('Bye!')
+                break
+
+
+if __name__ == '__main__':
+    banking_sys = BankingSystem()
+    banking_sys.main()
